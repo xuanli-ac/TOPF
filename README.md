@@ -1,48 +1,52 @@
 # Topography-based predictive framework (TOPF)
 >Code for implementing TOPF and relevant analysis
 
-## Description
-* data - gives the IDs of the HCP subjects included in the dataset1 and dataset2 (described in the manuscript)
-* data/ExampleData - includes the behavioural scores of all subjects (Behaviour.csv; available from HCP) and fMRI time series of two subjects as an example (raw data available from HCP). Family structure information should be accessed via HCP after application.
-* preproc - Custom bash and Matlab code for preprocessing imaging data
-* preproc/GLM - Custom code for preprocessing GLM-derived activation maps downloaded from HCP
+## Descriptions
+### data folder
+* SubjectID*.txt - IDs of the HCP subjects included in the dataset1 and dataset2 (described in the manuscript) separately
+* example_dataframe/df_X_*.csv - an example dataframe of input fMRI data, which concatenates fMRI time series of all ROIs across subjects
+* Subjects_info.csv - unrestricted phenotype information, downloaded from http://db.humanconnectome.org/
+* create_files_familyinfo - code for producing the files regarding family structure information used in run_TOPF.py. This code requires restricted information of subjects, which can be accessed and downloaded from http://db.humanconnectome.org/ after application.
 
-* code/TOPF.py - for performing TOPF on terminal (input arguments in order: datatype clipind phenostr permind clfname prob_type flag_coef seed pcind
-* code/TOPF_wrapper.sh + TOPF_submit.sh - if use cluster (give input arguments in *_submit.sh)
-* code/cal_featureimportance.py - compute the feature importance of each ROI for a given CV split
+### preproc 
+* custom bash and Matlab code for further preprocessing fMRI data
 
-* ** The code folder (containing code to implement TOPF and relevant analysis) will be made available upon manuscript acceptance. 
+### code folder
+* TOPF.py - core functions of TOPF, called by run_TOPF.py
+* run_TOPF.py - python code to run TOPF
+* run_TOPF.sh (wrapper function) + run_TOPF_submit.sh - if use clusters + HTCondor
 
-## Usage example:
+## run TOPF:
 
-#### TOPF 
+Usage:
+```
+python run_TOPF.py $wkdir $subid_list $resultdir $nroi $seed $condition_index $phenotype_str $nTR $feature_type $pcindex $thre $clfname $settingfile_path
 
-on terminal:
+required arguments:
+$wkdir: path to project folder
+$subid_list: path to the file of subjects id list
+$resultdir: path to result folder that will save outputs
+$nroi: total number of rois used
+$seed: an int used for shuffling samples during cross validations
+$condition_index: 1-7, correspond to the seven fMRI conditions studied in the manuscript,  "conditionlist = ['two_men','bridgeville','pockets','tfMRI_MOTOR_RL','tfMRI_SOCIAL_RL', 'tfMRI_WM_RL', 'tfMRI_LANGUAGE_RL'], respectively
+$phenotype_str: the label of the phenotype to be predicted given by HCP, e.g., PMAT24_A_CR
+$nTR: length of data to be used. nTR= 170: use only the first 170 TRs of the given data; nTR=0: use all TRs without removing any (full length)
+$feature_type: 'singlePC' or 'combinedPC'
+$pcindex: int, pcindex = 1: use PC1 loadings as features; pcindex = 2 and feature_type = combinedPC: use PC1 and PC2 loadings as features
+$thre: threshold of captured variance for feature selection
+$clfname: machine learning (ML) algorithm name. All available clfnames used by Julearn can be seen here: https://juaml.github.io/julearn/main/steps.html
+$settingfile_path: path to the file of ML algorithm settings, which specifies hyperparameters used by the chosen algorithm defined by scikit-learn
+```
+Examples:
 
-``python TOPF.py movie 1 PMAT24_A_CR 0 ridge regression 0 2 1``
+```
+in PC terminal:
+python run_TOPF.py /myproject/TOPF /myproject/TOPF/data/SubjectID_Dataset2_HCP7T_179.txt /myproject/TOPF/results 268 0 1 PMAT24_A_CR 170 'singlePC' 1 0.02 ridge /myproject/TOPF/code/ridge_settings.txt
 
-datatype = movie, clipind = 1, phenostr = PMAT24_A_CR, permind = 0 (no perm), clfname = ridge, prob_type = regression, flag_coef = 0 (don't save regression weights), seed = 2 (cv splits seed), pcind = 1 (PC1 loadings as features)
+on cluster + HTCondor:
+./run_TOPF_submit.sh | condor_submit
+```
 
-or
 
-``./TOPF.sh movie 1 PMAT24_A_CR 0 ridge regression 0 2 1``
 
-on cluster (with htcondor):
 
-``./TOPF_submit.sh | condor_submit``
-
-#### Compute feature importance 
-
-on terminal:
-
-``python cal_featureimportance.py movie 1 PMAT24_A_CR 0 ridge 100 66``
-
-datatype = movie, clipind = 1, phenostr = PMAT24_A_CR, cvind = 0 (0 - 9 cv repeats), clfname = ridge, nrep = 100, seed = 66 (permutation seed)
-
-or
-
-``./cal_featureimportance.sh movie 1 PMAT24_A_CR 0 ridge 100 66``
-
-on cluster:
-
-``./cal_featureimportance.sh | condor_submit``
