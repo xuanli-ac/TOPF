@@ -2,6 +2,19 @@
 >Code for implementing TOPF and relevant analysis
 
 ## Descriptions
+
+
+### set up environment
+
+* requirements: Python 3.9 julearn ipython ipykernel nilearn eli5 scikit-learn pandas numpy
+
+```
+conda create -n myenv python=3.9 ipython ipykernel scikit-learn pandas numpy
+conda activate myenv
+conda install -c conda-forge nilearn eli5 
+pip3 install -U julearn
+```
+
 ### data folder
 * SubjectID*.txt - IDs of the HCP subjects included in the dataset1 and dataset2 (described in the manuscript) separately
 * example_dataframe/df_X_*.csv - an example dataframe of input fMRI data, which concatenates fMRI time series of all ROIs across subjects
